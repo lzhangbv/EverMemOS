@@ -33,11 +33,13 @@
 
 <br>
 
+[![Image](https://github.com/user-attachments/assets/e19514c4-4f2f-48da-aa58-e96215405772)](https://luma.com/n88icl03)
+
 > [!IMPORTANT]
 >
 > ### Memory Genesis Competition 2026
 > 
-> Join our AI Memory Competition! Build innovative applications, plugins, or infrastructure improvements powered by EverMemOS.
+> Join our AI [Memory Competition](https://luma.com/n88icl03)! Build innovative applications, plugins, or infrastructure improvements powered by EverMemOS.
 > 
 > **Tracks:**
 > - **Agent + Memory** - Build intelligent agents with long-term, evolving memories
@@ -46,13 +48,10 @@
 > 
 > **[Get Started with the Competition Starter Kit](docs/STARTER_KIT.md)** 
 > 
-> Join our [Discord](https://discord.gg/gYep5nQRZJ) to find teammates and brainstorm ideas!
+> Join our [Discord](https://discord.gg/gYep5nQRZJ) to ask anything you want. AMA session is open to everyone and occurs biweekly.
 > 
 
 <br>
-
-![divider][divider-light]
-![divider][divider-dark]
 
 <!-- <details>
 <summary><kbd>Table of Contents</kbd></summary>
@@ -93,26 +92,80 @@ Welcome to EverMemOS! Join our community to help improve the project and collabo
 | [![Hugging Face Space][hugging-face-badge]][hugging-face] | Join our Hugging Face community to explore our spaces and models |
 | [![Reddit][reddit-badge]][reddit] | Join the Reddit community | -->
 
-<!-- <br>
-
-<a id="star-us"></a>
-## 🌟 Star and stay tuned with us 
-
-![star us gif](https://github.com/user-attachments/assets/0c512570-945a-483a-9f47-8e067bd34484) -->
-
 <br>
 
-## Exampels
+## Usecases
 
-![example gif](https://github.com/user-attachments/assets/13b87b33-403c-4e5a-acfb-095cc7b55d08)
+![Image](https://github.com/user-attachments/assets/4f96111f-3870-4b49-961c-98f75f62ece7)
+
+**OpenClaw Long-Term Memory Plugin(coming this week)**
 
 Claw is putting the pieces of his memory together. Imagine a 24/7 agent with continuous learning memory that you can carry with you wherever you go next.
 
 
-<!-- ![divider][divider-light]
-![divider][divider-dark] -->
+![divider][divider-light]
+![divider][divider-dark]
 
 <br>
+
+[![Image](https://github.com/user-attachments/assets/0a0b83f1-8b49-466a-b34e-f32e928c8b8f)](https://github.com/TEN-framework/ten-framework/tree/main/ai_agents/agents/examples/voice-assistant-with-EverMemOS)
+
+**Live2D Character with Memory**
+
+Add long-term memory to your anime character that can talk to you in real-time powered by [TEN Framework](https://github.com/TEN-framework/ten-framework).
+See the [Live2D Character with Memory Example](https://github.com/TEN-framework/ten-framework/tree/main/ai_agents/agents/examples/voice-assistant-with-EverMemOS) for more details.
+
+
+![divider][divider-light]
+![divider][divider-dark]
+
+<br>
+
+![Image](https://github.com/user-attachments/assets/f3480aea-9603-4d18-9599-8e3bd95ce5c0)
+
+**Computer-Use with Memory**
+
+Use computer-use to launch screenshot to do analysis all in your memory.
+See the [live demo]() for more details.
+
+
+![divider][divider-light]
+![divider][divider-dark]
+
+<br>
+
+
+[![Image](https://github.com/user-attachments/assets/672ecda7-33b4-4802-9805-9e4551cb1a7f)](https://github.com/EverMind-AI/evermem_got_demo)
+
+**Game of Thrones Memories**
+
+A demonstration of AI memory infrastructure through an interactive Q&A experience with "A Game of Thrones" 
+See the [code](https://github.com/EverMind-AI/evermem_got_demo) for more details.
+
+![divider][divider-light]
+![divider][divider-dark]
+
+<br>
+
+[![Image](https://github.com/user-attachments/assets/1b26be2f-7de2-4618-ac62-8be9d2d73f63)](https://github.com/EverMind-AI/evermem-claude-code)
+
+**EverMemOS Claude Code Plugin**
+
+Persistent memory for Claude Code. Automatically saves and recalls context from past coding sessions.
+See the [code](https://github.com/EverMind-AI/evermem-claude-code) for more details.
+
+![divider][divider-light]
+![divider][divider-dark]
+
+<br>
+
+[![Image](https://github.com/user-attachments/assets/06412c1d-8e61-4675-9aef-e8c005e00928)](https://main.d2j21qxnymu6wl.amplifyapp.com/graph.html)
+
+**Visualize Memories with Graphs**
+
+Memory Graph view that visualizes your stored entities and how they relate, this is a pure frontend demo which hasn't been plugged with the backend yet, we are working on it.
+See the [live demo](https://main.d2j21qxnymu6wl.amplifyapp.com/graph.html).
+
 
 
 <!-- ## Introduction
@@ -148,6 +201,11 @@ Claw is putting the pieces of his memory together. Imagine a 24/7 agent with con
 </p> -->
 
 <br>
+<div align="right">
+
+[![][back-to-top]][readme-top]
+
+</div>
 
 ## Quick Start
 
@@ -192,6 +250,11 @@ curl http://localhost:1995/health
 ✅ Server running at `http://localhost:1995` • [Full Setup Guide](docs/installation/SETUP.md)
 
 <br>
+<div align="right">
+
+[![][back-to-top]][readme-top]
+
+</div>
 
 ## Basic Usage
 
@@ -226,6 +289,11 @@ for memory_group in result.get("memories", []):
 📖 [More Examples](docs/usage/USAGE_EXAMPLES.md) • 📚 [API Reference](docs/api_docs/memory_api.md) • 🎯 [Interactive Demos](docs/usage/DEMOS.md)
 
 <br>
+<div align="right">
+
+[![][back-to-top]][readme-top]
+
+</div>
 
 ## Demo
 
@@ -254,6 +322,11 @@ uv run python src/bootstrap.py demo/chat_with_memory.py
 See the [Demo Guide](docs/usage/DEMOS.md) for details.
 
 <br>
+<div align="right">
+
+[![][back-to-top]][readme-top]
+
+</div>
 
 ## Advanced Techniques
 
@@ -263,6 +336,11 @@ See the [Demo Guide](docs/usage/DEMOS.md) for details.
 - **[Batch Operations](docs/usage/BATCH_OPERATIONS.md)** - Process multiple messages efficiently
 
 <br>
+<div align="right">
+
+[![][back-to-top]][readme-top]
+
+</div>
 
 ## Documentation
 
@@ -277,6 +355,11 @@ See the [Demo Guide](docs/usage/DEMOS.md) for details.
 | [Evaluation Guide][evaluation-guide] | Benchmark testing |
 
 <br>
+<div align="right">
+
+[![][back-to-top]][readme-top]
+
+</div>
 
 ## Evaluation & Benchmarking
 
@@ -313,6 +396,11 @@ cat evaluation/results/locomo-evermemos/report.txt
 📊 [Full Evaluation Guide](evaluation/README.md) • 📈 [Complete Results](https://huggingface.co/datasets/EverMind-AI/EverMemOS_Eval_Results)
 
 <br>
+<div align="right">
+
+[![][back-to-top]][readme-top]
+
+</div>
 
 ## GitHub Codespaces
 
@@ -345,6 +433,11 @@ EverMemOS supports [GitHub Codespaces](https://github.com/features/codespaces) f
 All infrastructure services (MongoDB, Elasticsearch, Milvus, Redis) start automatically and are pre-configured to work together.
 
 <br>
+<div align="right">
+
+[![][back-to-top]][readme-top]
+
+</div>
 
 ## Questions
 
@@ -441,7 +534,7 @@ Read our [Contribution Guidelines](CONTRIBUTING.md) for code standards and Git w
 [demo-section]: #demo
 
 <!-- Dividers -->
-[divider-light]: https://github.com/user-attachments/assets/aec54c94-ced9-4683-ae58-0a5a7ed803bd#gh-light-mode-only
+[divider-light]: https://github.com/user-attachments/assets/2e2bbcc6-e6d8-4227-83c6-0620fc96f761#gh-light-mode-only
 [divider-dark]: https://github.com/user-attachments/assets/d57fad08-4f49-4a1c-bdfc-f659a5d86150#gh-dark-mode-only
 
 [banner-gif]: https://github.com/user-attachments/assets/dfdf2572-f1dd-4b92-a65a-f314619a3922
