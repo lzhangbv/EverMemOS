@@ -88,6 +88,23 @@ _PROMPT_REGISTRY = {
         "en": ("memory_layer.prompts.en.event_log_prompts", False),
         "zh": ("memory_layer.prompts.zh.event_log_prompts", False),
     },
+    # Knowledge Graph Extraction
+    "KG_SYSTEM_PROMPT": {
+        "en": ("memory_layer.prompts.en.kg_extraction_prompts", False),
+        "zh": ("memory_layer.prompts.zh.kg_extraction_prompts", False),
+    },
+    "KG_ENTITY_RELATION_PROMPT": {
+        "en": ("memory_layer.prompts.en.kg_extraction_prompts", False),
+        "zh": ("memory_layer.prompts.zh.kg_extraction_prompts", False),
+    },
+    "KG_EVENT_ENTITY_PROMPT": {
+        "en": ("memory_layer.prompts.en.kg_extraction_prompts", False),
+        "zh": ("memory_layer.prompts.zh.kg_extraction_prompts", False),
+    },
+    "KG_EVENT_RELATION_PROMPT": {
+        "en": ("memory_layer.prompts.en.kg_extraction_prompts", False),
+        "zh": ("memory_layer.prompts.zh.kg_extraction_prompts", False),
+    },
     # Profile Life (Explicit information + Implicit traits)
     "PROFILE_LIFE_UPDATE_PROMPT": {
         "en": ("memory_layer.prompts.en.profile_mem_life_prompts", False),

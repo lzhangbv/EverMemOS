@@ -82,9 +82,12 @@ from agentic_layer.agentic_utils import (
     check_sufficiency,
     generate_multi_queries,
 )
-from agentic_layer.retrieval_utils import reciprocal_rank_fusion
+from agentic_layer.retrieval_utils import reciprocal_rank_fusion, multi_rrf_fusion
 
 logger = logging.getLogger(__name__)
+
+# Feature flag for graph retrieval
+ENABLE_GRAPH_RETRIEVAL = os.getenv("ENABLE_GRAPH_RETRIEVAL", "false").lower() == "true"
 
 
 # MemoryType -> ES Repository mapping
@@ -699,20 +702,33 @@ class MemoryManager:
         request: 'RetrieveMemRequest',
         retrieve_method: str = RetrieveMethod.HYBRID.value,
     ) -> List[Dict]:
-        """Core hybrid search: keyword + vector + rerank, returns flat list"""
+        """Core hybrid search: keyword + vector + optional graph + rerank, returns flat list"""
         memory_type = (
             request.memory_types[0].value if request.memory_types else 'unknown'
         )
-        # Run keyword and vector search concurrently
-        kw_results, vec_results = await asyncio.gather(
+        # Run searches in parallel
+        tasks = [
             self.get_keyword_search_results(request, retrieve_method=retrieve_method),
             self.get_vector_search_results(request, retrieve_method=retrieve_method),
-        )
-        # Deduplicate by id
-        seen_ids = {h.get('id') for h in kw_results}
-        merged_results = kw_results + [
-            h for h in vec_results if h.get('id') not in seen_ids
         ]
+        if ENABLE_GRAPH_RETRIEVAL:
+            tasks.append(self._get_graph_search_results(request))
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # Merge all valid results, deduplicate by id
+        seen_ids: set = set()
+        merged_results: List[Dict] = []
+        for r in results:
+            if isinstance(r, Exception):
+                logger.warning(f"Search signal failed in hybrid: {r}")
+                continue
+            for h in r:
+                hid = h.get('id')
+                if hid not in seen_ids:
+                    seen_ids.add(hid)
+                    merged_results.append(h)
+
         return await self._rerank(
             request.query, merged_results, request.top_k, memory_type, retrieve_method
         )
@@ -722,22 +738,41 @@ class MemoryManager:
         request: 'RetrieveMemRequest',
         retrieve_method: str = RetrieveMethod.RRF.value,
     ) -> List[Dict]:
-        """Core RRF search: keyword + vector + RRF fusion, returns flat list"""
+        """Core RRF search: keyword + vector + optional graph + RRF fusion, returns flat list"""
         memory_type = (
             request.memory_types[0].value if request.memory_types else 'unknown'
         )
 
-        # Run keyword and vector search concurrently
-        kw, vec = await asyncio.gather(
+        # Run searches in parallel (keyword + vector + optional graph)
+        tasks = [
             self.get_keyword_search_results(request, retrieve_method=retrieve_method),
             self.get_vector_search_results(request, retrieve_method=retrieve_method),
-        )
+        ]
+        if ENABLE_GRAPH_RETRIEVAL:
+            tasks.append(self._get_graph_search_results(request))
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # RRF fusion with stage metrics
         rrf_start = time.perf_counter()
-        kw_tuples = [(h, h.get('score', 0)) for h in kw]
-        vec_tuples = [(h, h.get('score', 0)) for h in vec]
-        fused = reciprocal_rank_fusion(kw_tuples, vec_tuples, k=60)
+
+        # Collect valid results, skip exceptions
+        tuples_list = []
+        for r in results:
+            if isinstance(r, Exception):
+                logger.warning(f"Search signal failed in RRF: {r}")
+                continue
+            tuples_list.append([(h, h.get('score', 0)) for h in r])
+
+        if len(tuples_list) == 2 and not ENABLE_GRAPH_RETRIEVAL:
+            # Fast path: original 2-way RRF
+            fused = reciprocal_rank_fusion(tuples_list[0], tuples_list[1], k=60)
+        elif tuples_list:
+            # N-way RRF (supports 2 or 3 signals)
+            fused = multi_rrf_fusion(tuples_list, k=60)
+        else:
+            fused = []
+
         record_retrieve_stage(
             retrieve_method=retrieve_method,
             stage='rrf_fusion',
@@ -760,6 +795,24 @@ class MemoryManager:
             return 'validation_error'
         else:
             return 'unknown'
+
+    async def _get_graph_search_results(
+        self, request: 'RetrieveMemRequest'
+    ) -> List[Dict]:
+        """Graph-based retrieval via query2edge + PPR."""
+        try:
+            from agentic_layer.graph_retrieval_service import GraphRetrievalService
+
+            service = GraphRetrievalService()
+            return await service.search(
+                query=request.query,
+                user_id=request.user_id,
+                group_id=request.group_id,
+                top_k=request.top_k,
+            )
+        except Exception as e:
+            logger.warning(f"Graph retrieval failed, returning empty: {e}")
+            return []
 
     async def _to_response(
         self, hits: List[Dict], req: 'RetrieveMemRequest'

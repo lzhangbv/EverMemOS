@@ -761,7 +761,41 @@ async def _process_memories(
         state.request, state.memcell, state.current_time, state.request.raw_data_type
     )
 
+    # Async knowledge graph update (non-blocking)
+    if DEFAULT_MEMORIZE_CONFIG.enable_knowledge_graph and event_logs:
+        asyncio.create_task(
+            _update_knowledge_graph(state, event_logs),
+            name="kg_graph_update",
+        )
+
     return episodes_count + foresight_count + eventlog_count
+
+
+async def _update_knowledge_graph(
+    state: ExtractionState, event_logs: List[EventLog]
+) -> None:
+    """Trigger knowledge graph update from extracted event logs (fire-and-forget)."""
+    try:
+        from biz_layer.kg_graph_builder import KnowledgeGraphBuilder
+        from memory_layer.llm.llm_provider import LLMProvider
+
+        llm_provider = LLMProvider()
+        builder = KnowledgeGraphBuilder(llm_provider)
+
+        for event_log in event_logs:
+            facts = event_log.atomic_fact
+            if not facts or not isinstance(facts, list):
+                continue
+            await builder.update_graph(
+                atomic_facts=facts,
+                memory_id=str(event_log.id or ""),
+                memory_type="event_log",
+                user_id=event_log.user_id or "",
+                group_id=state.request.group_id,
+                timestamp=event_log.timestamp,
+            )
+    except Exception as e:
+        logger.error(f"Knowledge graph update failed (non-blocking): {e}")
 
 
 async def _extract_foresights(

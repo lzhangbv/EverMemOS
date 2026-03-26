@@ -34,6 +34,10 @@ class MemorizeConfig:
     # Default parent type for Foresight and EventLog (memcell or episode)
     default_parent_type: str = ParentType.MEMCELL.value
 
+    # ===== Knowledge Graph configuration =====
+    # Whether to enable knowledge graph construction from memories
+    enable_knowledge_graph: bool = False
+
     @classmethod
     def from_env(cls) -> "MemorizeConfig":
         """Load configuration from environment variables, use defaults if not set"""
@@ -51,6 +55,10 @@ class MemorizeConfig:
             default_parent_type=os.getenv(
                 "DEFAULT_PARENT_TYPE", ParentType.MEMCELL.value
             ),
+            enable_knowledge_graph=os.getenv(
+                "ENABLE_KNOWLEDGE_GRAPH", "false"
+            ).lower()
+            == "true",
         )
 
 
