@@ -103,8 +103,12 @@ class OpenAIProvider(LLMProvider):
             "provider": openrouter_provider,
             "response_format": response_format,
         }
-        # print(data)
-        # print(data["extra_body"])
+        # Merge extra_body into request data
+        if extra_body:
+            data.update(extra_body)
+        # Disable thinking/reasoning if env var set
+        if os.getenv("LLM_DISABLE_THINKING", "").lower() == "true" and "thinking" not in data:
+            data["thinking"] = {"type": "disabled"}
         # Add max_tokens if specified
         if max_tokens is not None:
             data["max_tokens"] = max_tokens
@@ -116,10 +120,11 @@ class OpenAIProvider(LLMProvider):
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {self.api_key}',
         }
-        max_retries = 5
+        max_retries = int(os.getenv("LLM_MAX_RETRIES", "2"))
+        llm_timeout = int(os.getenv("LLM_TIMEOUT", "360"))
         for retry_num in range(max_retries):
             try:
-                timeout = aiohttp.ClientTimeout(total=600)
+                timeout = aiohttp.ClientTimeout(total=llm_timeout)
                 async with aiohttp.ClientSession(timeout=timeout) as session:
                     async with session.post(
                         f"{self.base_url}/chat/completions", json=data, headers=headers
@@ -201,7 +206,8 @@ class OpenAIProvider(LLMProvider):
                                 'timestamp': time.time(),
                             }
 
-                        return response_data['choices'][0]['message']['content']
+                        msg = response_data['choices'][0]['message']
+                        return msg.get('content') or msg.get('reasoning_content', '')
 
             except aiohttp.ClientError as e:
                 error_time = time.perf_counter()

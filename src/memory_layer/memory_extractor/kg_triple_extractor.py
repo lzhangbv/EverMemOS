@@ -70,10 +70,9 @@ class KGTripleExtractor:
         return []
 
     async def _call_llm(self, prompt: str) -> str:
-        """Call LLM with system prompt."""
-        return await self.llm_provider.generate(
-            prompt, system_prompt=self.system_prompt
-        )
+        """Call LLM with system prompt prepended."""
+        full_prompt = f"{self.system_prompt}\n\n{prompt}"
+        return await self.llm_provider.generate(full_prompt)
 
     async def extract_entity_relations(
         self, atomic_facts: List[str]
@@ -82,24 +81,23 @@ class KGTripleExtractor:
         facts_text = "\n".join(f"- {fact}" for fact in atomic_facts)
         prompt = self.entity_relation_prompt + facts_text
 
-        for retry in range(3):
-            try:
-                response = await self._call_llm(prompt)
-                items = self._parse_json_array(response)
-                triples = []
-                for item in items:
-                    if all(k in item for k in ("Head", "Relation", "Tail")):
-                        triples.append(
-                            Triple(
-                                head=str(item["Head"]).strip(),
-                                relation=str(item["Relation"]).strip(),
-                                tail=str(item["Tail"]).strip(),
-                            )
+        try:
+            response = await self._call_llm(prompt)
+            items = self._parse_json_array(response)
+            triples = []
+            for item in items:
+                if all(k in item for k in ("Head", "Relation", "Tail")):
+                    triples.append(
+                        Triple(
+                            head=str(item["Head"]).strip(),
+                            relation=str(item["Relation"]).strip(),
+                            tail=str(item["Tail"]).strip(),
                         )
-                return triples
-            except Exception as e:
-                logger.warning(f"entity_relation extraction retry {retry+1}/3: {e}")
-        return []
+                    )
+            return triples
+        except Exception as e:
+            logger.warning(f"entity_relation extraction failed: {e}")
+            return []
 
     async def extract_event_entities(
         self, atomic_facts: List[str]
@@ -108,26 +106,25 @@ class KGTripleExtractor:
         facts_text = "\n".join(f"- {fact}" for fact in atomic_facts)
         prompt = self.event_entity_prompt + facts_text
 
-        for retry in range(3):
-            try:
-                response = await self._call_llm(prompt)
-                items = self._parse_json_array(response)
-                results = []
-                for item in items:
-                    if "Event" in item and "Entity" in item:
-                        entities = item["Entity"]
-                        if isinstance(entities, str):
-                            entities = [entities]
-                        results.append(
-                            EventEntity(
-                                event=str(item["Event"]).strip(),
-                                entities=[str(e).strip() for e in entities],
-                            )
+        try:
+            response = await self._call_llm(prompt)
+            items = self._parse_json_array(response)
+            results = []
+            for item in items:
+                if "Event" in item and "Entity" in item:
+                    entities = item["Entity"]
+                    if isinstance(entities, str):
+                        entities = [entities]
+                    results.append(
+                        EventEntity(
+                            event=str(item["Event"]).strip(),
+                            entities=[str(e).strip() for e in entities],
                         )
-                return results
-            except Exception as e:
-                logger.warning(f"event_entity extraction retry {retry+1}/3: {e}")
-        return []
+                    )
+            return results
+        except Exception as e:
+            logger.warning(f"event_entity extraction failed: {e}")
+            return []
 
     async def extract_event_relations(
         self, atomic_facts: List[str]
@@ -136,47 +133,57 @@ class KGTripleExtractor:
         facts_text = "\n".join(f"- {fact}" for fact in atomic_facts)
         prompt = self.event_relation_prompt + facts_text
 
-        for retry in range(3):
-            try:
-                response = await self._call_llm(prompt)
-                items = self._parse_json_array(response)
-                triples = []
-                for item in items:
-                    if all(k in item for k in ("Head", "Relation", "Tail")):
-                        triples.append(
-                            Triple(
-                                head=str(item["Head"]).strip(),
-                                relation=str(item["Relation"]).strip(),
-                                tail=str(item["Tail"]).strip(),
-                            )
+        try:
+            response = await self._call_llm(prompt)
+            items = self._parse_json_array(response)
+            triples = []
+            for item in items:
+                if all(k in item for k in ("Head", "Relation", "Tail")):
+                    triples.append(
+                        Triple(
+                            head=str(item["Head"]).strip(),
+                            relation=str(item["Relation"]).strip(),
+                            tail=str(item["Tail"]).strip(),
                         )
-                return triples
-            except Exception as e:
-                logger.warning(f"event_relation extraction retry {retry+1}/3: {e}")
-        return []
+                    )
+            return triples
+        except Exception as e:
+            logger.warning(f"event_relation extraction failed: {e}")
+            return []
 
     async def extract_all(
-        self, atomic_facts: List[str]
+        self, atomic_facts: List[str], batch_size: int = 15,
     ) -> TripleExtractionResult:
-        """Run all three extraction stages and return combined result."""
+        """Run all three extraction stages, batching long fact lists."""
         if not atomic_facts:
             return TripleExtractionResult()
 
         import asyncio
 
-        entity_rels, event_ents, event_rels = await asyncio.gather(
-            self.extract_entity_relations(atomic_facts),
-            self.extract_event_entities(atomic_facts),
-            self.extract_event_relations(atomic_facts),
-        )
+        # Split into batches to avoid prompt-too-long errors
+        batches = [
+            atomic_facts[i:i + batch_size]
+            for i in range(0, len(atomic_facts), batch_size)
+        ]
+
+        all_entity_rels, all_event_ents, all_event_rels = [], [], []
+        for batch in batches:
+            er, ee, evr = await asyncio.gather(
+                self.extract_entity_relations(batch),
+                self.extract_event_entities(batch),
+                self.extract_event_relations(batch),
+            )
+            all_entity_rels.extend(er)
+            all_event_ents.extend(ee)
+            all_event_rels.extend(evr)
 
         result = TripleExtractionResult(
-            entity_relations=entity_rels,
-            event_entities=event_ents,
-            event_relations=event_rels,
+            entity_relations=all_entity_rels,
+            event_entities=all_event_ents,
+            event_relations=all_event_rels,
         )
         logger.info(
-            f"KG extraction: {len(entity_rels)} entity_relations, "
-            f"{len(event_ents)} event_entities, {len(event_rels)} event_relations"
+            f"KG extraction: {len(all_entity_rels)} entity_relations, "
+            f"{len(all_event_ents)} event_entities, {len(all_event_rels)} event_relations"
         )
         return result

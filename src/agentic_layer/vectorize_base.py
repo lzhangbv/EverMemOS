@@ -6,6 +6,7 @@ Provides common functionality for embedding services using OpenAI-compatible API
 
 import asyncio
 import logging
+import os
 from typing import List, Optional, Tuple
 from abc import abstractmethod
 import numpy as np
@@ -114,6 +115,11 @@ class BaseVectorizeService(VectorizeServiceInterface):
                     # Add dimensions parameter if supported
                     if self._should_pass_dimensions() and self.config.dimensions > 0:
                         request_kwargs["dimensions"] = self.config.dimensions
+
+                    # Add extra_body for models requiring input_type (e.g. Nvidia asymmetric models)
+                    input_type = getattr(self.config, "input_type", "") or os.environ.get("VECTORIZE_INPUT_TYPE", "")
+                    if input_type:
+                        request_kwargs["extra_body"] = {"input_type": input_type}
 
                     response = await self.client.embeddings.create(**request_kwargs)
                     return response
