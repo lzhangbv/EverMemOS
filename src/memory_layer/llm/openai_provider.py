@@ -35,7 +35,7 @@ class OpenAIProvider(LLMProvider):
         api_key: str | None = None,
         base_url: str | None = None,
         temperature: float = 0.3,
-        max_tokens: int | None = 100 * 1024,
+        max_tokens: int | None = 4096,
         enable_stats: bool = False,  # New: optional statistics feature, disabled by default
         **kwargs,
     ):
