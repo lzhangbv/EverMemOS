@@ -181,7 +181,9 @@ class EventLogExtractor:
         prompt = prompt.replace("{{TIME}}", time_str)
 
         # 3. Call LLM to generate event log
-        response = await self.llm_provider.generate(prompt)
+        response = await self.llm_provider.generate(
+            prompt, response_format={"type": "json_object"},
+        )
 
         # 4. Parse LLM response
         data = self._parse_llm_response(response)
@@ -265,7 +267,8 @@ class EventLogExtractor:
         #    input_text = memcell.episode
         #    timestamp = memcell.timestamp
 
-        for retry in range(5):
+        max_retries = 2
+        for retry in range(max_retries):
             try:
                 return await self._extract_event_log(
                     input_text,
@@ -275,10 +278,10 @@ class EventLogExtractor:
                     group_id=group_id,
                 )
             except Exception as e:
-                logger.warning(f"Retrying to extract event log {retry+1}/5: {e}")
-                if retry == 4:
-                    logger.error(f"Failed to extract event log after 5 retries")
-                    raise Exception(f"Failed to extract event log: {e}")
+                logger.warning(f"Retrying to extract event log {retry+1}/{max_retries}: {e}")
+                if retry == max_retries - 1:
+                    logger.error(f"Failed to extract event log after {max_retries} retries, skipping")
+                    return None
                 continue
 
 

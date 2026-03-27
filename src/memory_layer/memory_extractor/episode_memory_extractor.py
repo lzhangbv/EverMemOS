@@ -259,12 +259,15 @@ class EpisodeMemoryExtractor(MemoryExtractor):
                 user_name = participants_name_map.get(user_id, user_id)
                 format_params["user_name"] = user_name
 
-        # Call LLM (with retry)
+        # Call LLM (with retry, max 2 attempts)
         data = None
-        for i in range(5):
+        max_retries = 2
+        for i in range(max_retries):
             try:
                 prompt = prompt_template.format(**format_params)
-                response = await self.llm_provider.generate(prompt)
+                response = await self.llm_provider.generate(
+                    prompt, response_format={"type": "json_object"},
+                )
 
                 # Parse JSON
                 if '```json' in response:
@@ -293,9 +296,10 @@ class EpisodeMemoryExtractor(MemoryExtractor):
                 # Validation passed, exit retry loop
                 break
             except Exception as e:
-                logger.warning(f"Episode extraction retry {i+1}/5: {e}")
-                if i == 4:
-                    raise Exception("Episode memory extraction failed after 5 retries")
+                logger.warning(f"Episode extraction retry {i+1}/{max_retries}: {e}")
+                if i == max_retries - 1:
+                    logger.error(f"Episode extraction failed after {max_retries} retries, skipping")
+                    return None
                 continue
 
         # Use first 200 characters of content as default summary if summary is missing
