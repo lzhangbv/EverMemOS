@@ -6,7 +6,6 @@ Provides common functionality for embedding services using OpenAI-compatible API
 
 import asyncio
 import logging
-import os
 from typing import List, Optional, Tuple
 from abc import abstractmethod
 import numpy as np
@@ -19,6 +18,9 @@ from agentic_layer.vectorize_interface import (
 )
 
 logger = logging.getLogger(__name__)
+
+QUERY_INPUT_TYPES = {"query"}
+DOCUMENT_INPUT_TYPES = {"passage", "passages"}
 
 
 class BaseVectorizeService(VectorizeServiceInterface):
@@ -55,6 +57,50 @@ class BaseVectorizeService(VectorizeServiceInterface):
     def _should_truncate_client_side(self) -> bool:
         """Whether to truncate embeddings on client side"""
         pass
+
+    def _normalize_input_type(self, input_type: Optional[str]) -> str:
+        if input_type is None:
+            return ""
+        return input_type.strip().lower()
+
+    def _is_query_input_type(self, input_type: Optional[str]) -> bool:
+        return self._normalize_input_type(input_type) in QUERY_INPUT_TYPES
+
+    def _is_document_input_type(self, input_type: Optional[str]) -> bool:
+        return self._normalize_input_type(input_type) in DOCUMENT_INPUT_TYPES
+
+    def _resolve_input_type(self, is_query: bool) -> str:
+        base_input_type = getattr(self.config, "input_type", "")
+        query_input_type = getattr(self.config, "query_input_type", "")
+        document_input_type = getattr(self.config, "document_input_type", "")
+
+        if is_query:
+            if query_input_type:
+                return query_input_type
+
+            if self._is_query_input_type(base_input_type):
+                return base_input_type
+
+            if (
+                self._is_document_input_type(base_input_type)
+                or self._is_document_input_type(document_input_type)
+            ):
+                return "query"
+
+            return base_input_type
+
+        if document_input_type:
+            return document_input_type
+
+        if self._is_document_input_type(base_input_type):
+            return base_input_type
+
+        if self._is_query_input_type(base_input_type) or self._is_query_input_type(
+            query_input_type
+        ):
+            return "passage"
+
+        return base_input_type
 
     async def __aenter__(self):
         await self._ensure_client()
@@ -116,8 +162,8 @@ class BaseVectorizeService(VectorizeServiceInterface):
                     if self._should_pass_dimensions() and self.config.dimensions > 0:
                         request_kwargs["dimensions"] = self.config.dimensions
 
-                    # Add extra_body for models requiring input_type (e.g. Nvidia asymmetric models)
-                    input_type = getattr(self.config, "input_type", "") or os.environ.get("VECTORIZE_INPUT_TYPE", "")
+                    # Use query/passage automatically for asymmetric embedding models.
+                    input_type = self._resolve_input_type(is_query)
                     if input_type:
                         request_kwargs["extra_body"] = {"input_type": input_type}
 
@@ -239,4 +285,3 @@ class BaseVectorizeService(VectorizeServiceInterface):
     def get_model_name(self) -> str:
         """Get the current model name"""
         return self.config.model
-

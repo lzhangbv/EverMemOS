@@ -5,7 +5,6 @@ This module provides vectorization service for self-deployed embedding servers,
 such as vLLM, Ollama, or other OpenAI-compatible endpoints.
 """
 
-import os
 import logging
 from typing import Optional, Tuple
 from dataclasses import dataclass
@@ -28,6 +27,9 @@ class VllmVectorizeConfig:
     max_concurrent_requests: int = 5
     encoding_format: str = "float"
     dimensions: int = 1024  # Client-side truncation target
+    input_type: str = ""
+    query_input_type: str = ""
+    document_input_type: str = ""
 
 
 class VllmVectorizeService(BaseVectorizeService):
@@ -55,4 +57,3 @@ class VllmVectorizeService(BaseVectorizeService):
     def _should_truncate_client_side(self) -> bool:
         """vLLM services need client-side truncation"""
         return True
-

@@ -513,7 +513,9 @@ class MemoryManager:
             # Convert query text to vector (embedding stage)
             logger.debug(f"Starting to vectorize query text: {query}")
             embedding_start = time.perf_counter()
-            query_vector = await vectorize_service.get_embedding(query)
+            query_vector = await vectorize_service.get_embedding(
+                query, is_query=True
+            )
             query_vector_list = query_vector.tolist()  # Convert to list format
             record_retrieve_stage(
                 retrieve_method=retrieve_method,

@@ -69,7 +69,8 @@ class GraphRetrievalService:
         # Step 1: Embed query
         vectorize_service = get_vectorize_service()
         query_vec = np.asarray(
-            await vectorize_service.get_embedding(query), dtype=np.float32
+            await vectorize_service.get_embedding(query, is_query=True),
+            dtype=np.float32,
         )
         query_norm = np.linalg.norm(query_vec)
         if query_norm == 0:

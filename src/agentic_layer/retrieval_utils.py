@@ -203,7 +203,7 @@ async def lightweight_retrieval(
     try:
         vectorize_service = get_vectorize_service()
         query_vec = np.asarray(
-            await vectorize_service.get_embedding(query), dtype=float
+            await vectorize_service.get_embedding(query, is_query=True), dtype=float
         )
         query_norm = np.linalg.norm(query_vec)
 

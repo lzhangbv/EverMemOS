@@ -61,6 +61,9 @@ class HybridVectorizeConfig:
     max_concurrent_requests: int = 5
     encoding_format: str = "float"
     dimensions: int = 1024
+    input_type: str = ""
+    query_input_type: str = ""
+    document_input_type: str = ""
 
     # Fallback behavior
     enable_fallback: bool = True
@@ -95,6 +98,13 @@ class HybridVectorizeConfig:
         )
         self.encoding_format = os.getenv("VECTORIZE_ENCODING_FORMAT", self.encoding_format)
         self.dimensions = int(os.getenv("VECTORIZE_DIMENSIONS", str(self.dimensions)))
+        self.input_type = os.getenv("VECTORIZE_INPUT_TYPE", self.input_type)
+        self.query_input_type = os.getenv(
+            "VECTORIZE_QUERY_INPUT_TYPE", self.query_input_type
+        )
+        self.document_input_type = os.getenv(
+            "VECTORIZE_DOCUMENT_INPUT_TYPE", self.document_input_type
+        )
 
         # Fallback behavior
         # Enable fallback only if:
@@ -126,6 +136,9 @@ def _create_service_from_config(
     max_concurrent: int,
     encoding_format: str,
     dimensions: int,
+    input_type: str,
+    query_input_type: str,
+    document_input_type: str,
 ) -> VectorizeServiceInterface:
     """
     Factory function to create a vectorize service based on provider type
@@ -156,6 +169,9 @@ def _create_service_from_config(
             max_concurrent_requests=max_concurrent,
             encoding_format=encoding_format,
             dimensions=dimensions,
+            input_type=input_type,
+            query_input_type=query_input_type,
+            document_input_type=document_input_type,
         )
         return VllmVectorizeService(config)
     elif provider.lower() == "deepinfra":
@@ -169,6 +185,9 @@ def _create_service_from_config(
             max_concurrent_requests=max_concurrent,
             encoding_format=encoding_format,
             dimensions=dimensions,
+            input_type=input_type,
+            query_input_type=query_input_type,
+            document_input_type=document_input_type,
         )
         return DeepInfraVectorizeService(config)
     else:
@@ -214,6 +233,9 @@ class HybridVectorizeService(VectorizeServiceInterface):
             max_concurrent=config.max_concurrent_requests,
             encoding_format=config.encoding_format,
             dimensions=config.dimensions,
+            input_type=config.input_type,
+            query_input_type=config.query_input_type,
+            document_input_type=config.document_input_type,
         )
         
         # Create fallback service if enabled
@@ -230,6 +252,9 @@ class HybridVectorizeService(VectorizeServiceInterface):
                 max_concurrent=config.max_concurrent_requests,
                 encoding_format=config.encoding_format,
                 dimensions=config.dimensions,
+                input_type=config.input_type,
+                query_input_type=config.query_input_type,
+                document_input_type=config.document_input_type,
             )
 
         logger.info(

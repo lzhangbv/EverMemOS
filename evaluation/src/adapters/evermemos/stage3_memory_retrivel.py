@@ -447,7 +447,9 @@ async def search_with_emb_index(
     if query_embedding is not None:
         query_vec = query_embedding
     else:
-        query_vec = np.array(await get_vectorize_service().get_embedding(query))
+        query_vec = np.array(
+            await get_vectorize_service().get_embedding(query, is_query=True)
+        )
 
     query_norm = np.linalg.norm(query_vec)
 

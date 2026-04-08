@@ -4,7 +4,6 @@ DeepInfra Vectorize Service Implementation
 Commercial API implementation for DeepInfra embedding service
 """
 
-import os
 import logging
 from typing import Optional, Tuple
 from dataclasses import dataclass
@@ -27,6 +26,9 @@ class DeepInfraVectorizeConfig:
     max_concurrent_requests: int = 5
     encoding_format: str = "float"
     dimensions: int = 1024
+    input_type: str = ""
+    query_input_type: str = ""
+    document_input_type: str = ""
 
 
 class DeepInfraVectorizeService(BaseVectorizeService):
